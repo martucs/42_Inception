@@ -1,0 +1,9 @@
+1️⃣ Why your current Dockerfile fails
+
+ENTRYPOINT ["mariadb"]
+
+mariadb is the client, not the server.
+
+That’s why when you run the container, there’s no server running → the socket /run/mysqld/mysqld.sock doesn’t exist → you get ERROR 2002 (HY000).
+
+You need to start mysqld, the server, instead.
