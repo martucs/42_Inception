@@ -6,6 +6,11 @@ RUN apt update \
 
 RUN mkdir -p /run/mysqld && chown -R mysql:mysql /run/mysqld
 
+COPY mariadb_init.sh /docker-entrypoint-initdb.d/mariadb_init.sh
+
+RUN chmod +x /docker-entrypoint-initdb.d/mariadb_init.sh
+
+
 ENTRYPOINT ["mysqld"]
 
 #ENTRYPOINT ["mysqld", "mariadb"] -> esto da error prq el servidor mysqld no puede recibir argumentos
