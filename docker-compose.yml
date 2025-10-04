@@ -1,12 +1,13 @@
-version: "3.8"
+name: inception
+
 
 services:
-  db:
+  mariadb:
     build: ./srcs/mariadb
     env_file:
       - .env
-    networks:
-      - wp-network
+#    networks:
+ #     - wp-network
 
  # wordpress:
  #   build: ./wordpress
@@ -17,8 +18,6 @@ services:
  #     WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
  #     WORDPRESS_DB_USER: ${MYSQL_USER}
  #     WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
- #   networks:
- #     - wp-network
-
-networks:
-  wp-network:
+ #
+ #networks:
+ # - wp-network

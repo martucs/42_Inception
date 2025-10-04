@@ -8,7 +8,9 @@ That’s why when you run the container, there’s no server running → the soc
 
 You need to start mysqld, the server, instead.
 
-// Por que no lanzar el servidor de mariadb y el cliente de mariadb a la vez en el container:
+
+
+2.  Por que no lanzar el servidor de mariadb y el cliente de mariadb a la vez en el container:
 
 In a container, you generally want only the server running, because:
 
@@ -25,3 +27,22 @@ You could technically script it (like mysqld & mariadb -u root) but:
 - The client would just sit there waiting for input, serving no real purpose.
 
 - It makes your container harder to manage.
+
+
+3. Al intentar exectar mariadb con un usuario no root despues de haber hecho docker compose up, no tenia permiso para exejutar mariadb(cliente) hasta que en el script he anadido una inicializacion: "mariadb -u root <<-EOSQL
+  CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};
+  CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
+  GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'%';
+  FLUSH PRIVILEGES;
+EOSQL
+
+"
+
+4. como solo podemos correr un solo proceso en el container, cuando queremos crear una tabla en mariadb, necesitamos un usuario que se conecte como cliente(mariadb) al servidor (mysqld) y eso ya es un proceso, osea que lo hqcemos de manera temporal antes de lanzar el proceso real (PID 1) del contenedor. POr eso tenemos cosas como : "mysqladmin -u root shutdown" en el .sh.
+
+5. passwords
+# esta copia de el .env con las contrasenas esta prohibido por subject
+# “Passwords must not be present in your Dockerfiles.”
+# ademas, aunque lo haga, si creo la imagen con: "docker build -t inception-db srcs/mariadb" desde la carpeta de inception, tampoco me va a dejar copiar el .env por razones de seguridad, porque le he especificado que el build localtion seria la carpeta 'mariadb' y en esa el .env no existe.
+COPY ../../.env /root/.env
+
