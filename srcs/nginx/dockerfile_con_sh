@@ -1,0 +1,29 @@
+FROM debian:bullseye
+
+RUN apt-get update && \
+    apt-get install -y nginx openssl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create directories for certificates and website
+RUN mkdir -p /etc/ssl/certs /etc/ssl/private /var/www/martalop.42.fr
+
+# Copy nginx configuration
+COPY conf/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy website files (optional: can be empty index.html)
+COPY www/ /var/www/martalop.42.fr/
+
+# Ensure NGINX can read website files
+RUN chown -R www-data:www-data /var/www/html && \
+    chmod -R 755 /var/www/html
+
+# Copy custom entrypoint script
+COPY nginx_init.sh /nginx_init.sh
+RUN chmod +x /nginx_init.sh
+
+# Create simple webpage
+#RUN mkdir -p /var/www/html && echo "<h1>Hello from NGINX container</h1>" > /var/www/html/index.html
+
+EXPOSE 443
+
+ENTRYPOINT ["/nginx_init.sh"]
