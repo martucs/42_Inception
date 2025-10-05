@@ -19,9 +19,9 @@ RUN mkdir -p /etc/ssl/certs /etc/ssl/private \
 # Set up NGINX config
 COPY ./conf/nginx.conf /etc/nginx/sites-available/default
 
+#aqui copiaba mi html personalizado a la carpeta 'html' para que el contenedor pueda acceder
 #COPY html/ /var/www/martalop.42.fr/
-
-# Fix permissions
+# y le daba permisos para poder leerlo luego sin haberlo creado 
 #RUN chown -R www-data:www-data /var/www/martalop.42.fr
 
 # Expose HTTPS
