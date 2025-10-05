@@ -19,10 +19,10 @@ RUN mkdir -p /etc/ssl/certs /etc/ssl/private \
 # Set up NGINX config
 COPY ./conf/nginx.conf /etc/nginx/sites-available/default
 
-COPY html/ /var/www/martalop.42.fr/
+#COPY html/ /var/www/martalop.42.fr/
 
 # Fix permissions
-RUN chown -R www-data:www-data /var/www/martalop.42.fr
+#RUN chown -R www-data:www-data /var/www/martalop.42.fr
 
 # Expose HTTPS
 EXPOSE 443
