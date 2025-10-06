@@ -1,0 +1,28 @@
+FROM debian:bullseye
+
+RUN apt update && \
+    apt install -y --no-install-recommends php-fpm curl ca-certificates php-mysqli php-json
+#php-mysqli & php-json son extensiones minimas obligatorias que nos pide wordpress
+
+#necesitamos tanto curl como wp-cli para instalar wordpress
+RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
+    chmod +x wp-cli.phar && \
+    mv wp-cli.phar /usr/local/bin/wp
+
+RUN mkdir -p /run/php && \
+    chmod 777 /run/php
+
+COPY --chmod=700 wordpress_init.sh /root/wordpress_init.sh
+
+WORKDIR /var/www/html
+
+EXPOSE 9000
+
+ENTRYPOINT [ "/root/init_wordpress.sh" ]
+
+CMD [ "php-fpm7.4", "-F" ]
+#el -F es para que se ejecute php como deamon
+
+
+# este comando solo me mantiene el contenedor vivo
+#ENTRYPOINT [ "tail", "-f", "/dev/null" ]
