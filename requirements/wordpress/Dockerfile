@@ -1,8 +1,11 @@
 FROM debian:bullseye
 
 RUN apt update && \
-    apt install -y --no-install-recommends php-fpm curl ca-certificates php-mysqli php-json
+    apt install -y --no-install-recommends php-fpm curl ca-certificates php-mysqli php-json wget unzip
 #php-mysqli & php-json son extensiones minimas obligatorias que nos pide wordpress
+
+# Prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
 
 #necesitamos tanto curl como wp-cli para instalar wordpress
 RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
@@ -12,9 +15,13 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
 RUN mkdir -p /run/php && \
     chmod 777 /run/php
 
-COPY --chmod=700 wordpress_init.sh /root/wordpress_init.sh
-
+# wordpress must be installed in the root directory of nginx, so we set the workdir there: 
 WORKDIR /var/www/html
+
+COPY ./wordpress_init.sh /root/wordpress_init.sh
+RUN chmod 700 /root/wordpress_init.sh
+
+COPY ./conf/inception_pool.conf /etc/php/7.4/fpm/pool.d/inception
 
 EXPOSE 9000
 

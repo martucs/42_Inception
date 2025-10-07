@@ -1,23 +1,40 @@
 name: inception
 
-
 services:
   mariadb:
-    build: ./srcs/mariadb
+    build: ./requirements/mariadb
     env_file:
       - .env
-#    networks:
- #     - wp-network
+    networks:
+      - inception-network
 
- # wordpress:
- #   build: ./wordpress
- #   env_file:
- #     - .env
+  wordpress:
+    build: ./requirements/wordpress
+    env_file:
+      - .env
+    depends_on:
+      - mariadb
+    networks:
+      - inception-network
+
+  nginx:
+    build: ./requirements/nginx
+    ports:
+      - "443:443"
+    env_file:
+      - .env
+    depends_on:
+      - wordpress
+    networks:
+      - inception-network
+
+networks:
+   inception-network:
+     driver: bridge
+
+
  #   environment:
  #     WORDPRESS_DB_HOST: db:3306
  #     WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
  #     WORDPRESS_DB_USER: ${MYSQL_USER}
  #     WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
- #
- #networks:
- # - wp-network

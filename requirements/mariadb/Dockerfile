@@ -11,7 +11,7 @@ RUN mkdir -p /run/mysqld && chown -R mysql:mysql /run/mysqld
 # ademas, aunque lo haga, si creo la imagen con: "docker build -t inception-db srcs/mariadb" desde la carpeta de inception, tampoco me va a dejar copiar el .env por razones de seguridad, porque le he especificado que el build localtion seria la carpeta 'mariadb' y en esa el .env no existe.
 COPY .env /root/.env
 
-COPY srcs/mariadb/mariadb_init.sh /usr/local/bin/mariadb_init.sh
+COPY mariadb_init.sh /usr/local/bin/mariadb_init.sh
 
 RUN chmod +x /usr/local/bin/mariadb_init.sh
 
