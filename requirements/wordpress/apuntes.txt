@@ -1,0 +1,12 @@
+
+Al crear el archivo de configuracion de wp con 'wp config create', nos pide los datos de usuario, password, etc. Una de las cosas que nos pide es el '--dbhost'.
+Esta es la direccion ip de la base de datos. Si usaramos un mismo container para wordpress y mariadb, pondriamos simplemente localhost. Pero como no es el caso, necesitamos identificar el contenedor de mariadb, para eso esta la docker network.
+Con los dos contenerdores en la misma network simplemente podemos poner:
+--dbhost=mariadb:3306. (3306 es el puerto en el que esta escuchando mariadb en ese contenedor y mariadb lo traduce docker a una ip valida tipo 172.18.0.2)
+El error que vemos si intentamos configurar wordpress sin haber conectado la base de datos a la docker network es este:
+	PHP Warning:  mysqli_real_connect(): php_network_getaddresses: getaddrinfo failed: Temporary failure in name resolution in phar:///usr/local/bin/wp/vendor/wp-cli/config-command/src/Config_Command.php on line 234
+	Error: Database connection error (2002) php_network_getaddresses: getaddrinfo failed: Temporary failure in name resolution
+Este error lo he visto al mirar los docker logs del contenedor, donde me aparecia esto:
+"Downloading WordPress 6.8.3 (en_US)... md5 hash verified: d2c8b06fa3875fb890e3fa8fdbbc42fb Success: WordPress downloaded.  parameter Error: 'wp-config.php' not found. Either create one manually or use wp config create. Error: 'wp-config.php' not found. Either create one manually or use wp config create."
+Este error sale porque no habia podido completar el comando wp config create porque no podia traducir 'mariadb:3306' a ninguna ip, no habia network.
+

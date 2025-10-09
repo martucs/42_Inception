@@ -12,6 +12,14 @@ echo "✅ Loaded environment variables:"
 echo "  DB: $MYSQL_DATABASE"
 echo "  USER: $MYSQL_USER"
 
+# --- Ensure MariaDB listens on all interfaces ---
+echo "🛠️ Configuring MariaDB bind-address..."
+cat > /etc/mysql/mariadb.conf.d/99-bind.cnf <<EOF
+[mysqld]
+bind-address = 0.0.0.0
+EOF
+echo "✅ bind-address set to 0.0.0.0"
+
 # --- Start MariaDB in the background ---
 mysqld_safe &
 

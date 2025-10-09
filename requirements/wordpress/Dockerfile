@@ -18,14 +18,18 @@ RUN mkdir -p /run/php && \
 # wordpress must be installed in the root directory of nginx, so we set the workdir there: 
 WORKDIR /var/www/html
 
-COPY ./wordpress_init.sh /root/wordpress_init.sh
+COPY wordpress_init.sh /root/wordpress_init.sh
+
 RUN chmod 700 /root/wordpress_init.sh
+
+#temporal
+COPY .env /root/.env
 
 COPY ./conf/inception_pool.conf /etc/php/7.4/fpm/pool.d/inception
 
 EXPOSE 9000
 
-ENTRYPOINT [ "/root/init_wordpress.sh" ]
+ENTRYPOINT [ "/root/wordpress_init.sh" ]
 
 CMD [ "php-fpm7.4", "-F" ]
 #el -F es para que se ejecute php como deamon

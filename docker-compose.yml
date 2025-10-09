@@ -2,13 +2,16 @@ name: inception
 
 services:
   mariadb:
+    container_name: mariadb
     build: ./requirements/mariadb
     env_file:
       - .env
     networks:
       - inception-network
+    restart: always
 
   wordpress:
+    container_name: wordpress-php
     build: ./requirements/wordpress
     env_file:
       - .env
@@ -16,8 +19,10 @@ services:
       - mariadb
     networks:
       - inception-network
+    restart: always
 
   nginx:
+    container_name: nginx
     build: ./requirements/nginx
     ports:
       - "443:443"
@@ -27,6 +32,7 @@ services:
       - wordpress
     networks:
       - inception-network
+    restart: always
 
 networks:
    inception-network:

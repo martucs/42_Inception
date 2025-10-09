@@ -46,3 +46,13 @@ EOSQL
 # ademas, aunque lo haga, si creo la imagen con: "docker build -t inception-db srcs/mariadb" desde la carpeta de inception, tampoco me va a dejar copiar el .env por razones de seguridad, porque le he especificado que el build localtion seria la carpeta 'mariadb' y en esa el .env no existe.
 COPY ../../.env /root/.env
 
+6. no estaba cambiando la configuracion de mariadb para que pueda conectarse con cualquier ip. Solo me podia conectar conmmigo misma (localhost). Esta configuracion esta en /etc/mysql/mariadb.conf.d/50-server.cnf. He cambiado la linea de:
+bind-address = 127.0.0.1, a: bind-address = 0.0.0.0. Con esto el contendor de wordpress puede econtrarme.
+este cambio lo he anadido al script asi:
+
+echo "🛠️ Configuring MariaDB bind-address..."
+cat > /etc/mysql/mariadb.conf.d/99-bind.cnf <<EOF
+[mysqld]
+bind-address = 0.0.0.0
+EOF
+echo "✅ bind-address set to 0.0.0.0"
