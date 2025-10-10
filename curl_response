@@ -46,3 +46,10 @@ root@ac54e21acd06:/var/www/html# curl -v https://api.wordpress.org
 * Closing connection 0
 * TLSv1.3 (OUT), TLS alert, close notify (256):
 
+
+
+
+
+/root/wordpress_init.sh: line 10: : Name or service not known
+/root/wordpress_init.sh: line 10: /dev/tcp//3306: Invalid argument
+
