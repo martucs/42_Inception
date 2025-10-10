@@ -81,3 +81,9 @@ Waiting for network...
 Error: WordPress files seem to already be present here.
 Waiting for network...
 
+
+
+
+
+docker run -d --name wordpress --network inception_net -e DATABASE_HOST=mariadb -e DATABASE_USER=db_user -e DATABASE_USER_PASSWORD=db_pass -e DATABASE_NAME=wordpress -e DOMAIN_NAME=martalop.42.fr -e WORDPRESS_TITLE="My WP Site" -e WORDPRESS_ADMIN_USER=admin_marta -e WORDPRESS_ADMIN_PASSWORD=strongpassword -e WORDPRESS_AUTHOR_USER=author_marta -e WORDPRESS_AUTHOR_EMAIL=author@example.com -e WORDPRESS_AUTHOR_PASSWORD=authorpassword wordpress_i:latest
+
