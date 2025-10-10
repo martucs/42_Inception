@@ -1,0 +1,48 @@
+root@ac54e21acd06:/var/www/html# curl -v https://api.wordpress.org
+*   Trying 198.143.164.251:443...
+* Connected to api.wordpress.org (198.143.164.251) port 443 (#0)
+* ALPN, offering h2
+* ALPN, offering http/1.1
+* successfully set certificate verify locations:
+*  CAfile: /etc/ssl/certs/ca-certificates.crt
+*  CApath: /etc/ssl/certs
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384
+* ALPN, server accepted to use http/1.1
+* Server certificate:
+*  subject: CN=wordpress.org
+*  start date: Sep 28 19:43:55 2025 GMT
+*  expire date: Dec 27 19:43:54 2025 GMT
+*  subjectAltName: host "api.wordpress.org" matched cert's "*.wordpress.org"
+*  issuer: C=US; O=Let's Encrypt; CN=E7
+*  SSL certificate verify ok.
+> GET / HTTP/1.1
+> Host: api.wordpress.org
+> User-Agent: curl/7.74.0
+> Accept: */*
+> 
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+* old SSL session ID is stale, removing
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 302 Found
+< Server: nginx
+< Date: Fri, 10 Oct 2025 15:18:09 GMT
+< Content-Type: text/html; charset=utf-8
+< Transfer-Encoding: chunked
+< Connection: close
+< Location: https://developer.wordpress.org/rest-api/
+< X-Frame-Options: SAMEORIGIN
+< Alt-Svc: h3=":443"; ma=86400
+< X-nc:  ord 3
+< 
+* Closing connection 0
+* TLSv1.3 (OUT), TLS alert, close notify (256):
+
