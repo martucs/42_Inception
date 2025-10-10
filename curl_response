@@ -114,4 +114,14 @@ wp user create $WORDPRESS_AUTHOR_USER $WORDPRESS_AUTHOR_EMAIL --role=author --us
 exec "$@"
 martalc@debian
 
+Downloading WordPress 6.8.3 (en_US)...
+md5 hash verified: d2c8b06fa3875fb890e3fa8fdbbc42fb
+Success: WordPress downloaded.
+waiting for MariaDB to accept connections
+MariaDB is ready!
+Success: Generated 'wp-config.php' file.
+Error: Parameter errors:
+ missing --admin_email parameter (The email address for the admin user.)
+Error: The site you have requested is not installed.
+Run `wp core install` to create database tables.
 
