@@ -15,6 +15,9 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
 RUN mkdir -p /run/php && \
     chmod 777 /run/php
 
+#temporal
+COPY .env /root/.env
+
 # wordpress must be installed in the root directory of nginx, so we set the workdir there: 
 WORKDIR /var/www/html
 
@@ -22,8 +25,6 @@ COPY wordpress_init.sh /root/wordpress_init.sh
 
 RUN chmod 700 /root/wordpress_init.sh
 
-#temporal
-COPY .env /root/.env
 
 COPY ./conf/inception_pool.conf /etc/php/7.4/fpm/pool.d/inception
 
