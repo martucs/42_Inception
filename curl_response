@@ -53,3 +53,31 @@ root@ac54e21acd06:/var/www/html# curl -v https://api.wordpress.org
 /root/wordpress_init.sh: line 10: : Name or service not known
 /root/wordpress_init.sh: line 10: /dev/tcp//3306: Invalid argument
 
+
+Downloading WordPress 6.8.3 (en_US)...
+md5 hash verified: d2c8b06fa3875fb890e3fa8fdbbc42fb
+Success: WordPress downloaded.
+waiting for MariaDB to accept connections
+MariaDB is ready!
+Error: Database connection error (1045) Access denied for user ''@'wordpress.inception_net' (using password: YES)
+Error: 'wp-config.php' not found.
+Either create one manually or use `wp config create`.
+Error: 'wp-config.php' not found.
+Either create one manually or use `wp config create`.
+Error: WordPress files seem to already be present here.
+Waiting for network...
+Error: WordPress files seem to already be present here.
+Waiting for network...
+Error: WordPress files seem to already be present here.
+Waiting for network...
+Error: WordPress files seem to already be present here.
+Waiting for network...
+Error: WordPress files seem to already be present here.
+Waiting for network...
+Error: WordPress files seem to already be present here.
+Waiting for network...
+Error: WordPress files seem to already be present here.
+Waiting for network...
+Error: WordPress files seem to already be present here.
+Waiting for network...
+
