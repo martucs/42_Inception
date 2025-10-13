@@ -84,11 +84,6 @@ Waiting for network...
 
 
 
-
-docker run -d --name wordpress --network inception_net -e DATABASE_HOST=mariadb -e DATABASE_USER=db_user -e DATABASE_USER_PASSWORD=db_pass -e DATABASE_NAME=wordpress -e DOMAIN_NAME=martalop.42.fr -e WORDPRESS_TITLE="My WP Site" -e WORDPRESS_ADMIN_USER=admin_marta -e WORDPRESS_ADMIN_PASSWORD=strongpassword -e WORDPRESS_AUTHOR_USER=author_marta -e WORDPRESS_AUTHOR_EMAIL=author@example.com -e WORDPRESS_AUTHOR_PASSWORD=authorpassword wordpress_i:latest
-
-
-
 #! /bin/bash
 
 if [ -f wp-config.php ]; then return 0; fi
@@ -125,10 +120,11 @@ Error: Parameter errors:
 Error: The site you have requested is not installed.
 Run `wp core install` to create database tables.
 
-CORRECT COMMANDS:
+Error in wordpress dockerfile:
+"Step 7/11 : COPY --chmod=700 wordpress_init.sh /root/wordpress_init.sh the --chmod option requires BuildKit. Refer to https://docs.docker.com/go/buildkit/ to learn how to build images with BuildKit enabled"
 
-docker run -d --name mariadb --network inception_net -e MYSQL_ROOT_PASSWORD=supersecretroot -e MYSQL_DATABASE=wordpress -e MYSQL_USER=db_user -e MYSQL_PASSWORD=db_pass mariadb_image:latest 
-
-docker run -d --name wordpress --network inception_net -e DATABASE_HOST=mariadb -e DATABASE_USER_NAME=db_user -e DATABASE_USER_PASSWORD=db_pass -e DATABASE_NAME=wordpress -e DOMAIN_NAME=martalop.42.fr -e WORDPRESS_TITLE="My WP Site" -e WORDPRESS_ADMIN_USER=admin_marta -e WORDPRESS_ADMIN_PASSWORD=strongpassword -e WORDPRESS_AUTHOR_USER=author_marta -e WORDPRESS_AUTHOR_EMAIL=author@example.com -e WORDPRESS_AUTHOR_PASSWORD=authorpassword -e WORDPRESS_ADMIN_EMAIL=admin@example.com wordpress:latest 
-
+esto me pasaba porque usaba --chmod. esta flag es avanzada y solo esta en BuildKit, que no quiero instalar, asi que usando la alternativa:
+COPY wordpress_init.sh /root/wordpress_init.sh
+RUN chmod 700 /root/wordpress_init.sh
+se arregla el problema.
 
