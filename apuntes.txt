@@ -1,0 +1,89 @@
+GENERALES
+ - para que nginx pueda acceder a los archivos html que genera php-fpm, necesitamos un volumen para guardar esos archivos y que el contenedor de nginx los pueda ver. Sin ese volumen, los archivos php solo existen en el contenedor de wordpress-php-fpm. Uno de los problemas que tuve cuando ya estaban los 3 contenedores hechos y activos era que veia la pagina de welcome de nginx en vez de la de wordpress y era precisamente porque el contenedor de nginx no podia ver el index.php que tenia el contenedor de wp/php y se iba a la ruta predeterminada (/var/www/html/) y encontraba el .html de nginx y me lo mostraba. Por eso necesitamos el volumen para este proyecto.
+
+	A Docker volume (or a bind mount) lets you share a directory between containers. You put WordPress files in a volume and mount it in both containers:
+	In the WordPress container: PHP-FPM reads and executes the files.
+	In the NGINX container: NGINX sees the same files and serves them.
+
+
+ - cuidado con hacer 'stop' y 'start' en los contenedores. sobretodo si hay otros activos que no se han reseteado. En los archivos de configuracion de wordpress tuve problemas porque reutilizaba la misma imagen y hacia start y stop creo y no tenia bien controlado que pasa cuando el config php ya esta creado o cuando los usuarios de acceso a wp ya estan creados, etc. Maybe este problema se resuelve solo si usas docker compose. esto me ha pasado usando los comandos manuales de docker.
+
+ - la gracia de los archivos .env es tener todas las variables en un mismo sitio(que no sea a la vista en el Dockerfile). A no ser que uses docker Compose, si montas los contenedores de manera manual con docker run, no tiene sentido tener archivos .env porque copiar el .env en el contenedor no añade automaticamente esas variables en el environment verdadero del contenedor. Tendriamos que hacer un export de cada variable. Y parsear el archivo para hacer un export manualmente me parece un rollo. Asi que para testear manualmente con solo docker, hay que añadir la flag -e NOMBRE_DE_VAR=valor y asi se inicia el contenedor con esas variables de entorno.
+
+  así lo hice para mariadb y wordpress:
+    docker run -d --name mariadb --network inception_net -e MYSQL_ROOT_PASSWORD=supersecretroot -e MYSQL_DATABASE=wordpress -e MYSQL_USER=db_user -e MYSQL_PASSWORD=db_pass mariadb_image:latest 
+
+    docker run -d --name wordpress --network inception_net -e DATABASE_HOST=mariadb -e DATABASE_USER_NAME=db_user -e DATABASE_USER_PASSWORD=db_pass -e DATABASE_NAME=wordpress -e DOMAIN_NAME=martalop.42.fr -e WORDPRESS_TITLE="My WP Site" -e WORDPRESS_ADMIN_USER=admin_marta -e WORDPRESS_ADMIN_PASSWORD=strongpassword -e WORDPRESS_AUTHOR_USER=author_marta -e WORDPRESS_AUTHOR_EMAIL=author@example.com -e WORDPRESS_AUTHOR_PASSWORD=authorpassword -e WORDPRESS_ADMIN_EMAIL=admin@example.com wordpress:latest
+
+- OJITO con los nombres de los contenedores. Again, si usas docker-compose maybe esto ya no es problema, pero al hacer los comandos manualmente, si pones un nombre de contenedor diferente al que has puesto como identificador de un contenedor en un archivo de configuracion, problema porque no te va a reconocer la IP del contenedor con ese nombre. Hablo de cuando estan conectados en una network de  docker por ejemplo, o de si en un archivo de conf tenia puesta la conexion con mariadb:3306 y el contenedor no se llama mariadb, sino mariadb_container, no va a funcionar.
+
+PHP-FPM (FastCGI Process Manager) 
+Se encarga de generar los archivos php, ademas de gestionar las pools con los procesos de cada 'worker' y generar el html final que dara a el servidor, nginx. Es decir, cuando hay muchas php requests del servidor (nginx), cuando mucha gente se conecta a la web y pide un archivo html, nginx hace la traduccion a una request php (cuando no encuentra static files) que manda al php-fpm, que genera el php, pidiendo cosas a veces a la base de datos(mariadb), se encarga de gestionar esas peticiones y general el archivo html final que envia al servidor nginx a traves de otra fastCGI response. Nginx recibe el html y se lo envia al cliente(browser).
+
+WORDPRESS
+Al crear el archivo de configuracion de wp con 'wp config create', nos pide los datos de usuario, password, etc. Una de las cosas que nos pide es el '--dbhost'.
+Esta es la direccion ip de la base de datos. Si usaramos un mismo container para wordpress y mariadb, pondriamos simplemente localhost. Pero como no es el caso, necesitamos identificar el contenedor de mariadb, para eso esta la docker network.
+Con los dos contenerdores en la misma network simplemente podemos poner:
+--dbhost=mariadb:3306. (3306 es el puerto en el que esta escuchando mariadb en ese contenedor y mariadb lo traduce docker a una ip valida tipo 172.18.0.2)
+El error que vemos si intentamos configurar wordpress sin haber conectado la base de datos a la docker network es este:
+	PHP Warning:  mysqli_real_connect(): php_network_getaddresses: getaddrinfo failed: Temporary failure in name resolution in phar:///usr/local/bin/wp/vendor/wp-cli/config-command/src/Config_Command.php on line 234
+	Error: Database connection error (2002) php_network_getaddresses: getaddrinfo failed: Temporary failure in name resolution
+Este error lo he visto al mirar los docker logs del contenedor, donde me aparecia esto:
+"Downloading WordPress 6.8.3 (en_US)... md5 hash verified: d2c8b06fa3875fb890e3fa8fdbbc42fb Success: WordPress downloaded.  parameter Error: 'wp-config.php' not found. Either create one manually or use wp config create. Error: 'wp-config.php' not found. Either create one manually or use wp config create."
+Este error sale porque no habia podido completar el comando wp config create porque no podia traducir 'mariadb:3306' a ninguna ip, no habia network.
+
+MARIADB (errores)
+1. Why your current Dockerfile fails
+
+ENTRYPOINT ["mariadb"]
+
+mariadb is the client, not the server.
+
+That’s why when you run the container, there’s no server running → the socket /run/mysqld/mysqld.sock doesn’t exist → you get ERROR 2002 (HY000).
+
+You need to start mysqld, the server, instead.
+
+
+2.  Por que no lanzar el servidor de mariadb y el cliente de mariadb a la vez en el container:
+
+In a container, you generally want only the server running, because:
+
+- The container itself is meant to be the database service.
+- Other programs (WordPress, Adminer, or docker exec … mariadb) will connect to it when needed.
+- If you try to launch both server + client in one container, one of them has to stay in the foreground as PID 1 — but only one process can be the container’s “main process”.
+
+You could technically script it (like mysqld & mariadb -u root) but:
+
+- It goes against Docker best practices (one main service per container).
+- The client would just sit there waiting for input, serving no real purpose.
+- It makes your container harder to manage.
+
+
+3. Al intentar exectar mariadb con un usuario no root despues de haber hecho docker compose up, no tenia permiso para exejutar mariadb(cliente) hasta que en el script he anadido una inicializacion: "mariadb -u root <<-EOSQL
+  CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};
+  CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
+  GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'%';
+  FLUSH PRIVILEGES;
+EOSQL
+"
+
+4. como solo podemos correr un solo proceso en el container, cuando queremos crear una tabla en mariadb, necesitamos un usuario que se conecte como cliente(mariadb) al servidor (mysqld) y eso ya es un proceso, osea que lo hqcemos de manera temporal antes de lanzar el proceso real (PID 1) del contenedor. POr eso tenemos cosas como : "mysqladmin -u root shutdown" en el .sh.
+
+5. passwords
+# esta copia de el .env con las contrasenas esta prohibido por subject
+# “Passwords must not be present in your Dockerfiles.”
+# ademas, aunque lo haga, si creo la imagen con: "docker build -t inception-db srcs/mariadb" desde la carpeta de inception, tampoco me va a dejar copiar el .env por razones de seguridad, porque le he especificado que el build localtion seria la carpeta 'mariadb' y en esa el .env no existe.
+COPY ../../.env /root/.env
+
+6. no estaba cambiando la configuracion de mariadb para que pueda conectarse con cualquier ip. Solo me podia conectar conmmigo misma (localhost). Esta configuracion esta en /etc/mysql/mariadb.conf.d/50-server.cnf. He cambiado la linea de:
+bind-address = 127.0.0.1, a: bind-address = 0.0.0.0. Con esto el contendor de wordpress puede econtrarme.
+este cambio lo he anadido al script asi:
+
+echo "🛠️ Configuring MariaDB bind-address..."
+cat > /etc/mysql/mariadb.conf.d/99-bind.cnf <<EOF
+[mysqld]
+bind-address = 0.0.0.0
+EOF
+echo "✅ bind-address set to 0.0.0.0"
+
+
