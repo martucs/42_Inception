@@ -25,8 +25,8 @@ COPY wordpress_init.sh /root/wordpress_init.sh
 
 RUN chmod 700 /root/wordpress_init.sh
 
-
-COPY ./conf/inception_pool.conf /etc/php/7.4/fpm/pool.d/inception
+COPY ./conf/inception_pool.conf /etc/php/7.4/fpm/pool.d/inception.conf
+# importante poner el .conf!!!!! sino no me lo reconoce y coge la configuracion default!
 
 EXPOSE 9000
 

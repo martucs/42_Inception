@@ -11,8 +11,10 @@ services:
     restart: always
 
   wordpress:
-    container_name: wordpress-php
+    container_name: wordpress
     build: ./requirements/wordpress
+    volumes:
+      - wordpress_volume:/var/www/html
     env_file:
       - .env
     depends_on:
@@ -26,6 +28,9 @@ services:
     build: ./requirements/nginx
     ports:
       - "443:443"
+    volumes:
+      - wordpress_volume:/var/www/html:ro
+      # :ro = read only, que es lo unico que hace nginx, leer los archivos que ponga wordpress
     env_file:
       - .env
     depends_on:
@@ -38,9 +43,12 @@ networks:
    inception-network:
      driver: bridge
 
-
- #   environment:
- #     WORDPRESS_DB_HOST: db:3306
- #     WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
- #     WORDPRESS_DB_USER: ${MYSQL_USER}
- #     WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+volumes:
+  wordpress_volume:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/martalc/data/wordpress
+      # es 'martalc' porque es el usuario de la MV
+      # esta carpeta es la que va ligada con /var/www/html en el contenedor de nginx y el de wordpress
