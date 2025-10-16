@@ -4,6 +4,8 @@ services:
   mariadb:
     container_name: mariadb
     build: ./requirements/mariadb
+    volumes:
+      - database_volume:/var/lib/mysql
     env_file:
       - .env
     networks:
@@ -52,3 +54,9 @@ volumes:
       device: /home/martalc/data/wordpress
       # es 'martalc' porque es el usuario de la MV
       # esta carpeta es la que va ligada con /var/www/html en el contenedor de nginx y el de wordpress
+  database_volume:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/martalc/data/database
