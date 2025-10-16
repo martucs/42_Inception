@@ -17,6 +17,26 @@ GENERALES
 
 - OJITO con los nombres de los contenedores. Again, si usas docker-compose maybe esto ya no es problema, pero al hacer los comandos manualmente, si pones un nombre de contenedor diferente al que has puesto como identificador de un contenedor en un archivo de configuracion, problema porque no te va a reconocer la IP del contenedor con ese nombre. Hablo de cuando estan conectados en una network de  docker por ejemplo, o de si en un archivo de conf tenia puesta la conexion con mariadb:3306 y el contenedor no se llama mariadb, sino mariadb_container, no va a funcionar.
 
+
+CERTIFICADO OPENSSL Y $DOMAIN_NAME
+- en la config de nginx, cuando creamos el certificado que necesitamos para hacer la conexion https, cuando aun probaba con la url https://localhost, tenia puesto:
+	CN=martalop.42.fr
+That means its Common Name (CN) only matches martalop.42.fr. So when your browser connected to https://localhost, it saw:
+
+“The certificate is for a different host (martalop.42.fr).”
+
+and it refused to complete the HTTPS handshake (unless you forced it). Browsers interpret that kind of TLS failure as a network error — and when JS/CSS files fail to load due to a TLS mismatch, the console shows them as:
+	"CORS request did not succeed. Status code: (null)"
+este error lo vi en los console logs en el modo dev tools. Al cambiar el CN a localhost, ya cuadra.
+
+El mayor problema que habia tenido por eso, era que estaba usando el DOMAIN_NAME=martalop.42.fr, en vez de localhost. Eso me causaba errores del mismo estilo de CORS. Esa variable la usaba en la inicializacion de la base de datos:
+	wp core install --url=$DOMAIN_NAME ...
+este comando le dice a mariadb que las url que use tenian que contener martalop.42.fr, como por ejemplo:
+	https://martalop.42.fr/wp-includes/js/dist/...js
+pero no podia acceder a esos sitios obviamente porque aun no tenia mi ip local como martalop.42.fr, por eso veia la primera pagina de inicio bien, excepto por algunos iconos que estaban mal puestos, desalineados y en otra font, no la correcta. Imagino porque no podia llegar a esos archivos javascript y me mostraba el texto como podia.
+
+
+
 PHP-FPM (FastCGI Process Manager) 
 Se encarga de generar los archivos php, ademas de gestionar las pools con los procesos de cada 'worker' y generar el html final que dara a el servidor, nginx. Es decir, cuando hay muchas php requests del servidor (nginx), cuando mucha gente se conecta a la web y pide un archivo html, nginx hace la traduccion a una request php (cuando no encuentra static files) que manda al php-fpm, que genera el php, pidiendo cosas a veces a la base de datos(mariadb), se encarga de gestionar esas peticiones y general el archivo html final que envia al servidor nginx a traves de otra fastCGI response. Nginx recibe el html y se lo envia al cliente(browser).
 

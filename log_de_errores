@@ -128,3 +128,8 @@ COPY wordpress_init.sh /root/wordpress_init.sh
 RUN chmod 700 /root/wordpress_init.sh
 se arregla el problema.
 
+
+sudo rm -rf /home/martalc/data/wordpress/{*,.*}
+
+
+
