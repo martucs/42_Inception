@@ -17,6 +17,14 @@ GENERALES
 
 - OJITO con los nombres de los contenedores. Again, si usas docker-compose maybe esto ya no es problema, pero al hacer los comandos manualmente, si pones un nombre de contenedor diferente al que has puesto como identificador de un contenedor en un archivo de configuracion, problema porque no te va a reconocer la IP del contenedor con ese nombre. Hablo de cuando estan conectados en una network de  docker por ejemplo, o de si en un archivo de conf tenia puesta la conexion con mariadb:3306 y el contenedor no se llama mariadb, sino mariadb_container, no va a funcionar.
 
+- los archivos que generan la base de datos y wordpress, que ponen en las carpetas /varlib/mysql y /var/www/html en sus correspondientes contenedores, tambien aparecen en las carpetas /home/martalc/data/database y /home/martalc/data/wordpress en esta maquina virtual. Esa es la gracia de los volumenes. Que compartan una carpeta. Esto significa por ejemplo, que cuando wordpress genera el wp-confing.php, aunque luego hagamos docker compose down y lo eliminemos todo, seguimos teniendo ese archivo en nuestra mv. Y cuando volvemos a hacer docker compose up, los archivos que tenemos ahi tambien los heredan los contenedores en el momento de su creacion. Osea que cada vez que queremos borrar todo y empezar de 0, tenemos que borrar esos archivos de la maquina virtual, porque sino los contenedores los heredaran sin darnos cuenta. Como me ha dado cuenta yo?
+Porque me estaba apareciendo la pagina de wordpress en el navegador, pero en vez de la de login, la de instalacion de wordpress. Esto pasaba porque aunque detectaba el wp-config.php (del previo docker compose up), no detectaba una base de datos por aguna razon. creo que para arreglarlo tengo aue cambiar la configuracion de wordpress para que compruebe todo esto.
+
+- todo lo que hacemos una vez loggeados con cualquier usuario se queda permanentemente en los volumenes, aunque eliminemos los contenedores, a no ser que:
+	> obv eliminiemos los volumenes con la flag -v al hacer docker compose down
+	> eliminemos los archivos dentro de /home/martalc/data manualmente
+	> cambiemos las variables del .env (como USER_NAME)
+El .env file: ensures the new containers use the same DB name, username, and password → WordPress connects to the same database inside that volume. Al conectarse a la misma base daa datos ya creada con anterioridad, podemos ver los posts antiguos.
 
 CERTIFICADO OPENSSL Y $DOMAIN_NAME
 - en la config de nginx, cuando creamos el certificado que necesitamos para hacer la conexion https, cuando aun probaba con la url https://localhost, tenia puesto:

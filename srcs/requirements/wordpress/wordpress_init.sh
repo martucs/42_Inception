@@ -1,13 +1,14 @@
 #!/bin/bash
 set -e
 
-# Only initialize if wp-config.php is missing
-if [ -f wp-config.php ]; then
-    echo "✅ WordPress already configured. Skipping setup."
-    exec "$@"
-fi
+# --- Wait for MariaDB first ---
+echo "⏳ Waiting for MariaDB to accept connections..."
+while ! (echo > /dev/tcp/$DATABASE_HOST/3306) 2>/dev/null; do
+    sleep 3
+done
+echo "✅ MariaDB is ready!"
 
-# Download WordPress core only if not already present
+# --- Download WordPress core if missing ---
 if [ ! -f index.php ]; then
     echo "📦 Downloading WordPress..."
     until wp core download --allow-root; do
@@ -16,14 +17,9 @@ if [ ! -f index.php ]; then
     done
 fi
 
-echo "⏳ Waiting for MariaDB to accept connections..."
-while ! (echo > /dev/tcp/$DATABASE_HOST/3306) 2>/dev/null; do
-    sleep 3
-done
-echo "✅ MariaDB is ready!"
-
-# Create wp-config.php if missing
+# --- Create wp-config.php if missing ---
 if [ ! -f wp-config.php ]; then
+    echo "⚙️ Creating wp-config.php..."
     wp config create --dbname=$DATABASE_NAME \
                      --dbuser=$DATABASE_USER_NAME \
                      --dbpass=$DATABASE_USER_PASSWORD \
@@ -31,8 +27,10 @@ if [ ! -f wp-config.php ]; then
                      --allow-root
 fi
 
-# Install WordPress if not already installed
-if ! wp core is-installed --allow-root; then
+# --- Database integrity check ---
+# Even if wp-config.php exists, make sure DB has WordPress tables
+if ! wp core is-installed --allow-root >/dev/null 2>&1; then
+    echo "🧱 Database missing or empty — installing WordPress..."
     wp core install --url=$DOMAIN_NAME \
                     --title="$WORDPRESS_TITLE" \
                     --admin_user=$WORDPRESS_ADMIN_USER \
@@ -40,11 +38,12 @@ if ! wp core is-installed --allow-root; then
                     --admin_email=$WORDPRESS_ADMIN_EMAIL \
                     --allow-root
 else
-    echo "✅ WordPress already installed. Skipping core install."
+    echo "✅ WordPress already configured and DB is valid."
 fi
 
-# Create author user if not existing
+# --- Ensure author user exists ---
 if ! wp user get $WORDPRESS_AUTHOR_USER --field=ID --allow-root >/dev/null 2>&1; then
+    echo "👤 Creating author user..."
     wp user create $WORDPRESS_AUTHOR_USER $WORDPRESS_AUTHOR_EMAIL \
         --role=author \
         --user_pass=$WORDPRESS_AUTHOR_PASSWORD \
@@ -53,4 +52,5 @@ else
     echo "✅ Author user already exists. Skipping creation."
 fi
 
+# --- Start PHP-FPM ---
 exec "$@"
