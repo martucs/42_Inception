@@ -26,6 +26,11 @@ Porque me estaba apareciendo la pagina de wordpress en el navegador, pero en vez
 	> cambiemos las variables del .env (como USER_NAME)
 El .env file: ensures the new containers use the same DB name, username, and password → WordPress connects to the same database inside that volume. Al conectarse a la misma base daa datos ya creada con anterioridad, podemos ver los posts antiguos.
 
+- 'set -e' en los scripts makes the script exit immediately if any command fails
+
+- todas las rutas dependenden de donde estemos al hacer 'docker run'. Si hagp ese comando desde inception/ no es lo mismo que si lo hago desde /inception/srcs/mariadb. Cuando hacemos 'docker build -t nombre_de_imagen ruta/de/directorio/del/contenedor' ese ultimo paramentro es muy importante y ya nos especifica donde vamos a crear la imagen y de donde va a buscar los archivos.
+
+
 CERTIFICADO OPENSSL Y $DOMAIN_NAME
 - en la config de nginx, cuando creamos el certificado que necesitamos para hacer la conexion https, cuando aun probaba con la url https://localhost, tenia puesto:
 	CN=martalop.42.fr
@@ -42,7 +47,6 @@ El mayor problema que habia tenido por eso, era que estaba usando el DOMAIN_NAME
 este comando le dice a mariadb que las url que use tenian que contener martalop.42.fr, como por ejemplo:
 	https://martalop.42.fr/wp-includes/js/dist/...js
 pero no podia acceder a esos sitios obviamente porque aun no tenia mi ip local como martalop.42.fr, por eso veia la primera pagina de inicio bien, excepto por algunos iconos que estaban mal puestos, desalineados y en otra font, no la correcta. Imagino porque no podia llegar a esos archivos javascript y me mostraba el texto como podia.
-
 
 
 PHP-FPM (FastCGI Process Manager) 

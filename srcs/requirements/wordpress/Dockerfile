@@ -15,9 +15,6 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
 RUN mkdir -p /run/php && \
     chmod 777 /run/php
 
-#temporal
-COPY .env /root/.env
-
 # wordpress must be installed in the root directory of nginx, so we set the workdir there: 
 WORKDIR /var/www/html
 
@@ -34,7 +31,3 @@ ENTRYPOINT [ "/root/wordpress_init.sh" ]
 
 CMD [ "php-fpm7.4", "-F" ]
 #el -F es para que se ejecute php como deamon
-
-
-# este comando solo me mantiene el contenedor vivo
-#ENTRYPOINT [ "tail", "-f", "/dev/null" ]

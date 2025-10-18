@@ -4,6 +4,7 @@ services:
   mariadb:
     container_name: mariadb
     build: ./requirements/mariadb
+    image: mariadb:v1
     volumes:
       - database_volume:/var/lib/mysql
     env_file:
@@ -15,6 +16,7 @@ services:
   wordpress:
     container_name: wordpress
     build: ./requirements/wordpress
+    image: wordpress:v1
     volumes:
       - wordpress_volume:/var/www/html
     env_file:
@@ -28,6 +30,7 @@ services:
   nginx:
     container_name: nginx
     build: ./requirements/nginx
+    image: nginx:v1
     ports:
       - "443:443"
     volumes:
