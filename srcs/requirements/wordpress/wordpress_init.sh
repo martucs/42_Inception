@@ -6,6 +6,12 @@ echo "⏳ Waiting for MariaDB to accept connections..."
 while ! (echo > /dev/tcp/$DATABASE_HOST/3306) 2>/dev/null; do
     sleep 3
 done
+
+until mariadb -h $DATABASE_HOST -u $DATABASE_USER -p"$DATABASE_PASSWORD" -e "SELECT 1" &>/dev/null; do
+  echo "Waiting for MariaDB credentials..."
+  sleep 2
+done
+
 echo "✅ MariaDB is ready!"
 
 # --- Download WordPress core if missing ---

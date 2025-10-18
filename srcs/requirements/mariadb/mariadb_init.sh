@@ -1,17 +1,6 @@
 #!/bin/bash
 set -e
 
-# --- Load environment variables manually ---
-if [ -f /root/.env ]; then
-    export $(grep -v '^#' /root/.env | xargs)
-else
-    echo "⚠️  .env file not found at /root/.env"
-fi
-
-echo "✅ Loaded environment variables:"
-echo "  DB: $MYSQL_DATABASE"
-echo "  USER: $MYSQL_USER"
-
 # --- Ensure MariaDB listens on all interfaces ---
 echo "🛠️ Configuring MariaDB bind-address..."
 cat > /etc/mysql/mariadb.conf.d/99-bind.cnf <<EOF
@@ -20,26 +9,40 @@ bind-address = 0.0.0.0
 EOF
 echo "✅ bind-address set to 0.0.0.0"
 
-# --- Start MariaDB in the background ---
-mysqld_safe &
+# --- Start MariaDB as PID 1 in background ---
+echo "🛠️ Starting MariaDB as PID 1..."
+mysqld &
 
-# Wait until MariaDB is ready
-until mariadb -u root -e "SELECT 1" &> /dev/null; do
-    echo "⏳ Waiting for MariaDB to start..."
+MYSQL_PID=$!
+
+# --- Wait until MariaDB accepts root login ---
+echo "⏳ Waiting for MariaDB to accept root connections..."
+until mariadb -u root -e "SELECT 1" &>/dev/null; do
     sleep 1
 done
 
-# --- Initialization SQL ---
+# --- Initialize system tables if empty ---
+if [ ! -d "/var/lib/mysql/mysql" ]; then
+    echo "🛠️ Initializing system tables..."
+    mariadb-install-db --user=mysql --ldata=/var/lib/mysql
+fi
+
+# --- Ensure root password and WordPress user exist ---
+echo "🛠️ Setting root password and creating WordPress database/user..."
 mariadb -u root <<-EOSQL
-  CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};
-  CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
-  GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'%';
-  FLUSH PRIVILEGES;
+    -- Root user
+    ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
+    GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;
+
+    -- WordPress database and user
+    CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`;
+    CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
+    GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
+
+    FLUSH PRIVILEGES;
 EOSQL
 
-echo "✅ MariaDB initialized successfully."
+echo "✅ MariaDB is fully ready."
 
-# Stop background mysqld
-mysqladmin -u root shutdown
-
-exec mysqld_safe
+# --- Bring PID 1 process to foreground ---
+wait $MYSQL_PID

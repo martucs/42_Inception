@@ -1,4 +1,3 @@
-# Use Debian stable
 FROM debian:bullseye
 
 # Install NGINX, openssl for certs, curl for debugging
@@ -16,7 +15,6 @@ RUN mkdir -p /etc/ssl/certs /etc/ssl/private \
         -keyout /etc/ssl/private/martalop.key \
         -out /etc/ssl/certs/martalop.crt
 
-# Set up NGINX config
 COPY ./conf/nginx.conf /etc/nginx/sites-available/default
 
 #aqui copiaba mi html personalizado a la carpeta 'html' para que el contenedor pueda acceder

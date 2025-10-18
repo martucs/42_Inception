@@ -20,7 +20,7 @@ down-volumes:
 # Stop containers, remove volumes, and remove images
 clean: down-volumes
 	docker-compose -f srcs/docker-compose.yml rm -f
-	docker rmi -f $(shell docker images 'inception-*' -q) 2>/dev/null || true
+	docker rmi -f mariadb:v1 wordpress:v1 nginx:v1 2>/dev/null || true
 
 # Remove host files for volumes (use with caution!)
 clean-host-files:

@@ -91,13 +91,14 @@ You could technically script it (like mysqld & mariadb -u root) but:
 - It makes your container harder to manage.
 
 
-3. Al intentar exectar mariadb con un usuario no root despues de haber hecho docker compose up, no tenia permiso para exejutar mariadb(cliente) hasta que en el script he anadido una inicializacion: "mariadb -u root <<-EOSQL
+3. Si solo tengo esto en el script: 
+"mariadb -u root <<-EOSQL
   CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};
   CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
   GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'%';
   FLUSH PRIVILEGES;
-EOSQL
-"
+EOSQL"
+Tenemos problemas, porque en ningun momento estoy seteando la password para el root user. Desde dentro del contenedor de mariadb, me tiene que pedir una contrasenya si yo hago 'docker exec -it mariadb bash' y luego 'mariadb'. No deberia de entrar solo, que es lo que me pasaba. Tambien deberia pedirme una password cuando entro con el usuario creado $MYSQL_USER_NAME (db_user). El comando para entrar con un usurio es: 'mariadb/mysql -u user_name -p [password]'.
 
 4. como solo podemos correr un solo proceso en el container, cuando queremos crear una tabla en mariadb, necesitamos un usuario que se conecte como cliente(mariadb) al servidor (mysqld) y eso ya es un proceso, osea que lo hqcemos de manera temporal antes de lanzar el proceso real (PID 1) del contenedor. POr eso tenemos cosas como : "mysqladmin -u root shutdown" en el .sh.
 
