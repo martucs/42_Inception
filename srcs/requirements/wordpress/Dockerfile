@@ -1,13 +1,13 @@
 FROM debian:bullseye
 
 RUN apt update && \
-    apt install -y --no-install-recommends php-fpm curl ca-certificates php-mysqli php-json wget unzip
-#php-mysqli & php-json son extensiones minimas obligatorias que nos pide wordpress
+    apt install -y --no-install-recommends php-fpm curl ca-certificates php-mysqli php-json unzip
+# php-mysqli & php-json son extensiones minimas obligatorias que nos pide wordpress
 
 # Prevent interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
 
-#necesitamos tanto curl como wp-cli para instalar wordpress
+#necesitabamos curl para instalar 'wp-cli' (Command Line Interface de wordpress)
 RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
     chmod +x wp-cli.phar && \
     mv wp-cli.phar /usr/local/bin/wp

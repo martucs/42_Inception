@@ -1,15 +1,10 @@
 #!/bin/bash
 set -e
 
-# --- Wait for MariaDB first ---
 echo "⏳ Waiting for MariaDB to accept connections..."
+# solo checkea que el puerto 3306 este abierto
 while ! (echo > /dev/tcp/$DATABASE_HOST/3306) 2>/dev/null; do
     sleep 3
-done
-
-until mariadb -h $DATABASE_HOST -u $DATABASE_USER -p"$DATABASE_PASSWORD" -e "SELECT 1" &>/dev/null; do
-  echo "Waiting for MariaDB credentials..."
-  sleep 2
 done
 
 echo "✅ MariaDB is ready!"
@@ -58,5 +53,10 @@ else
     echo "✅ Author user already exists. Skipping creation."
 fi
 
-# --- Start PHP-FPM ---
+# esto da permisos de creador al FPM para poder subir imagenes y cambiar temas en las carpetas wp-content/uploads y wp-content"
+chown -R www-data:www-data /var/www/html/wp-content/uploads
+chown -R www-data:www-data /var/www/html/wp-content
+
 exec "$@"
+# es lo mismo que "php-fpm7.4", "-F", que son los comandos enviados al script en el Dockerfile
+# lo dejamos con el @ para que los sustituya si hacemos cambios en el Dockerfile

@@ -42,6 +42,14 @@ mariadb -u root <<-EOSQL
     FLUSH PRIVILEGES;
 EOSQL
 
+# --- Verify TCP socket readiness ---
+echo "✅ MariaDB fully ready, testing TCP socket..."
+until mariadb-admin ping -u root -p"${MYSQL_ROOT_PASSWORD}" --host=localhost &>/dev/null; do
+    echo "⏳ Waiting for local socket to be ready..."
+    sleep 1
+done
+echo "✅ MariaDB TCP socket ready."
+
 echo "✅ MariaDB is fully ready."
 
 # --- Bring PID 1 process to foreground ---

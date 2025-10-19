@@ -1,10 +1,8 @@
 FROM debian:bullseye
 
-# Install NGINX, openssl for certs, curl for debugging
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx \
     openssl \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Create self-signed certificate
@@ -19,7 +17,7 @@ COPY ./conf/nginx.conf /etc/nginx/sites-available/default
 
 #aqui copiaba mi html personalizado a la carpeta 'html' para que el contenedor pueda acceder
 #COPY html/ /var/www/martalop.42.fr/
-# y le daba permisos para poder leerlo luego sin haberlo creado 
+# y le daba permisos al usuario de FPM (www-data) para poder leerlo luego sin haberlo creado 
 #RUN chown -R www-data:www-data /var/www/martalop.42.fr
 
 # Expose HTTPS
