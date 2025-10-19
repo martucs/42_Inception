@@ -9,25 +9,25 @@ up:
 
 # stops AND removes containers
 down:
-	docker-compose -f srcs/docker-compose.yml down
+	docker-compose -f srcs/docker-compose.yml down || true
 
 # down + removes volumes
 clean: down
-	docker-compose -f srcs/docker-compose.yml down -v
-	sudo rm -rf /home/martalc/data/wordpress/*
-	sudo rm -rf /home/martalc/data/database/*
-	# quita los host files, si no los quitamos volverian a aparecer en los nuevos contenedores porque realmente estos volumes son bind mounts (nosotros escogemos la ruta donde guarda el host los archivos)
+	docker-compose -f srcs/docker-compose.yml down -v || true
+	-sudo rm -rf /home/martalc/data/wordpress/* || true
+	-sudo rm -rf /home/martalc/data/database/* || true
+# quita los host files, si no los quitamos volverian a aparecer en los nuevos contenedores porque realmente estos volumes son bind mounts (nosotros escogemos la ruta donde guarda el host los archivos)
 
 # stops, removes & cleans in depth, including images and cached docker processes
 deep-clean: clean
 	docker rmi -f mariadb:v1 wordpress:v1 nginx:v1 2>/dev/null || true
-	docker system prune -a -f
+	docker system prune -a -f || true
 	
 rebuild: deep-clean build up
 
 # Show logs for all services
 logs:
-	docker-compose -f srcs/docker-compose.yml logs -f
+	docker-compose -f srcs/docker-compose.yml logs -f || true
 	# -f del final es 'force', para que no te pregunte
 
 help:

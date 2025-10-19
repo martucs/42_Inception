@@ -12,6 +12,11 @@ services:
     networks:
       - inception-network
     restart: always
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   wordpress:
     container_name: wordpress
@@ -22,7 +27,8 @@ services:
     env_file:
       - .env
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
     networks:
       - inception-network
     restart: always
