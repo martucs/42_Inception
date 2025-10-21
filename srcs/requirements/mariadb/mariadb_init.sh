@@ -17,9 +17,17 @@ MYSQL_PID=$!
 
 # --- Wait until MariaDB accepts root login ---
 echo "⏳ Waiting for MariaDB to accept root connections..."
-until mariadb -u root -e "SELECT 1" &>/dev/null; do
-    sleep 1
-done
+if [ ! -d "/var/lib/mysql/mysql" ]; then
+    # Fresh install — root has no password yet
+    until mariadb -u root -e "SELECT 1" &>/dev/null; do
+        sleep 1
+    done
+else
+    # Existing database — use real password
+    until mariadb -u root -p"${MYSQL_ROOT_PASSWORD}" -e "SELECT 1" &>/dev/null; do
+        sleep 1
+    done
+fi
 
 # --- Initialize system tables if empty ---
 if [ ! -d "/var/lib/mysql/mysql" ]; then
