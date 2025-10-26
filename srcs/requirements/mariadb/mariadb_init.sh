@@ -9,56 +9,58 @@ bind-address = 0.0.0.0
 EOF
 echo "✅ bind-address set to 0.0.0.0"
 
-# --- Start MariaDB as PID 1 in background ---
-echo "🛠️ Starting MariaDB as PID 1..."
-mysqld &
-
-MYSQL_PID=$!
-
-# --- Wait until MariaDB accepts root login ---
-echo "⏳ Waiting for MariaDB to accept root connections..."
-if [ ! -d "/var/lib/mysql/mysql" ]; then
-    # Fresh install — root has no password yet
-    until mariadb -u root -e "SELECT 1" &>/dev/null; do
-        sleep 1
-    done
-else
-    # Existing database — use real password
-    until mariadb -u root -p"${MYSQL_ROOT_PASSWORD}" -e "SELECT 1" &>/dev/null; do
-        sleep 1
-    done
-fi
-
-# --- Initialize system tables if empty ---
-if [ ! -d "/var/lib/mysql/mysql" ]; then
+# --- Initialize MariaDB data directory if empty ---
+if [ ! -f "/var/lib/mysql/mysql/user.frm" ]; then
     echo "🛠️ Initializing system tables..."
     mariadb-install-db --user=mysql --ldata=/var/lib/mysql
 fi
 
-# --- Ensure root password and WordPress user exist ---
-echo "🛠️ Setting root password and creating WordPress database/user..."
-mariadb -u root <<-EOSQL
-    -- Root user
-    ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
-    GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;
+# --- Start MariaDB in background ---
+echo "🛠️ Starting MariaDB..."
+mysqld &
+MYSQL_PID=$!
 
-    -- WordPress database and user
-    CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`;
-    CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
-    GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
+# --- Wait for MariaDB socket to be ready ---
+until mariadb -u root -sse "SELECT 1" &>/dev/null; do
+    echo "⏳ Waiting for MariaDB to be ready..."
+    sleep 1
+done
 
-    FLUSH PRIVILEGES;
+# --- Set root password only if not already set ---
+ROOT_PASSWORD_SET=$(mariadb -u root -sse "SELECT 1" 2>/dev/null || true)
+if [ -z "$ROOT_PASSWORD_SET" ]; then
+    echo "🛠️ Setting root password..."
+    mariadb -u root <<-EOSQL
+        ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
+        GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;
+        FLUSH PRIVILEGES;
 EOSQL
+    echo "✅ Root password set"
+else
+    echo "✅ Root password already configured"
+fi
+
+# --- Check if WordPress database exists ---
+EXISTING_DB=$(mariadb -u root -p"${MYSQL_ROOT_PASSWORD}" -sse "SHOW DATABASES LIKE '${MYSQL_DATABASE}'" || true)
+if [ -z "$EXISTING_DB" ]; then
+    echo "🛠️ Creating WordPress database and user..."
+    mariadb -u root -p"${MYSQL_ROOT_PASSWORD}" <<-EOSQL
+        CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`;
+        CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
+        GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
+        FLUSH PRIVILEGES;
+EOSQL
+    echo "✅ WordPress database and user created"
+else
+    echo "✅ WordPress database already exists, skipping creation"
+fi
 
 # --- Verify TCP socket readiness ---
-echo "✅ MariaDB fully ready, testing TCP socket..."
+echo "⏳ Checking TCP socket..."
 until mariadb-admin ping -u root -p"${MYSQL_ROOT_PASSWORD}" --host=localhost &>/dev/null; do
-    echo "⏳ Waiting for local socket to be ready..."
     sleep 1
 done
 echo "✅ MariaDB TCP socket ready."
-
-echo "✅ MariaDB is fully ready."
 
 # --- Bring PID 1 process to foreground ---
 wait $MYSQL_PID

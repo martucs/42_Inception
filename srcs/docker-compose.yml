@@ -13,7 +13,7 @@ services:
       - inception-network
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "mariadb -u${MYSQL_USER} -p${MYSQL_PASSWORD} -e 'USE ${MYSQL_DATABASE}; SELECT 1;'"]
+      test: ["CMD-SHELL", "mysqladmin --socket=/run/mysqld/mysqld.sock -u root -p${MYSQL_ROOT_PASSWORD} ping --silent"]
       interval: 5s
       timeout: 5s
       retries: 10
