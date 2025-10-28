@@ -30,6 +30,12 @@ El .env file: ensures the new containers use the same DB name, username, and pas
 
 - todas las rutas dependenden de donde estemos al hacer 'docker run'. Si hagp ese comando desde inception/ no es lo mismo que si lo hago desde /inception/srcs/mariadb. Cuando hacemos 'docker build -t nombre_de_imagen ruta/de/directorio/del/contenedor' ese ultimo paramentro es muy importante y ya nos especifica donde vamos a crear la imagen y de donde va a buscar los archivos.
 
+- cuando docker construye por primera vez una imagen y dentro del dockerfile con las instrucciones de esa imagen tenemos un entrypoint que ejecuta un script(archivo .sh), el script es copiado a la imagen, pero se ejecutara en el runtime, en el momento de ejecutar/iniciar el contenedor, osea cuando hagamos 'run' o 'docker compose up'.
+Esto significa que cuando montamos todo + destruimos todo menos volumenes e imagenes y luego volvemos a montar todo, docker no tiene que volver a pasar por el dockerfile, pero SI que ejecuta el script, osea que TIENE que estar preparado para que funcione en todos los casos, tengamos ya los volumenes con info, o sea la primera vez que montamos los contenedores!!
+En primer lugar, no tendria mucho sentido volver a crear los usuarios cuando ya estaban creados. Es verdad que todo esto se puede proteger un poco poniendo comandos con IF NOT EXIST o del estilo, pero mejor evitar volver a crear cuando ya tenemos la base de datos creada. En segundo lugar, he tenido muuchos problemas al checkear que mariadb este lista con el comando mariadb -u root loquesea. Porque si es la primera vez que creamos el contenedor, root aun no tiene seteada una password, pero si es la segunda vez que lo iniciamos y mantenemos los volumenes de la ultima vez,  root ya tiene root password, por tanto el comando fallara si no el especificamos la -p con la $MYSQL_ROOT_PASSWORD.
+Esto es un poco lio y parece ser que el root que te crea automaticamente mariadb no 'necesita' la password porque tambien puede saber de manera segura quien es root con uno de sus UNIX sockets. Esto no lo acabo de tener claro pero bueno al final decido checkear siempre con password y hacer el checkeo solo cuando estoy segura de que, o ya he configurado la password, o estoy creando el contenedor con los datos anteriorres ya existentes en la base de datos.
+
+
 
 CERTIFICADO OPENSSL Y $DOMAIN_NAME
 - en la config de nginx, cuando creamos el certificado que necesitamos para hacer la conexion https, cuando aun probaba con la url https://localhost, tenia puesto:
@@ -118,5 +124,23 @@ cat > /etc/mysql/mariadb.conf.d/99-bind.cnf <<EOF
 bind-address = 0.0.0.0
 EOF
 echo "✅ bind-address set to 0.0.0.0"
+
+7. cuidado al hacer el check de que los volumenes ya tengan cosas dentro:
+
+"In MariaDB ≥10.5, the user.frm file no longer exists because the system tables have moved to the InnoDB data dictionary (not .frm files anymore)"
+
+resulta que en nuevas versiones de mariadb, las tablas estaran en /var/lib/mysql/mysql.ibd por ejemplo, y no en /var/lib/mysql/mysql/user.frm.
+
+En el script de mariadb yp tenia una comprobacion de si existia el archivo user.frm, y a partir de ahi decidia si tenia que volver a configurar maridb o no, porq si existia el archivo, significaba que ya habia un volumen con info previa. Al final la mejor manera de checkear si hay cosas en las carpetas ligadas a los volumenes es checkear si /var/lib/mysql/mysql existie y si tiene archivos dentro o no. Asi se ha quedado mi script: 
+
+if [ ! -d "/var/lib/mysql/mysql" ] || [ -z "$(ls -A /var/lib/mysql/mysql 2>/dev/null)" ]; then
+    echo "Initializing system tables (directory empty)"
+    mariadb-install-db --user=mysql --ldata=/var/lib/mysql --skip-test-db
+    DB_WAS_EMPTY=true
+else
+    DB_WAS_EMPTY=false
+fi
+
+8. parece que al anadir esto "RUN rm -rf /var/lib/mysql/*" en el dockerfile de mariadb he conseguido que me creara todo de 0 la primera vez que creamos contenedores y volumenes. Imagino que me estaba dando problemas porque en algun momento puede que no haya cerrado bien algun contenedor que se ha quedado ligado a un volumen, pero nidea, porque yo siempre limpio la carpeta de los volumenes en el host (/home/martalc/data/database y /home/martalc/data/wordpress)
 
 
