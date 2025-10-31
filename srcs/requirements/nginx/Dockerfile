@@ -25,3 +25,5 @@ EXPOSE 443
 
 # Start NGINX in foreground
 CMD ["nginx", "-g", "daemon off;"]
+# '-g' nos permite cambiar cosas de la condiguracion del nginx daemon
+# quitamos el modo daemon que se inicia por default porque necesitamos que nginx se ejecute en primer plano, que sea el proceso principal (PID 1) del contenedor
