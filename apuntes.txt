@@ -40,7 +40,8 @@ Esto es un poco lio y parece ser que el root que te crea automaticamente mariadb
 		(configuraciones de roots, etc)
 	wait mysqld
 
-esto lanzaba mysqld como daemon, osea, en segundo plano, y luego el propio script se esperaba a que ese proceso acabase. Que como es un daemon, nunca acaba, a no ser que haya algún problema serio, se apague el contenedor, etc.
+esto lanzaba mysqld como daemon, osea, en segundo plano, y luego el propio script se esperaba a que ese proceso acabase. Que como es un daemon, nunca acaba, a no ser que haya algún problema serio, se apague el contenedor, etc. Una de las consecuencias de hacer esto es que se quede colgado el proceso hijo que se crea dentro del script para ejecutar mysqld, además de que la señal de SIGTERM no se manda a MariaDB, sino a bash, lo cual dificulta identificar problemas con los logs y tal.
+
 Por lo tanto, hay que poner siempre en el Dockerfile: o bien ENTRYPOINT[script] y CMD, o tener solo ENTRYPOINT[script] y luego un 'exec programaenprimerplano' dentro del script. Dejo escrito en el apartado de mariadb cómo hacer bien la inicializacion teniendo esto en cuenta.
 
 
