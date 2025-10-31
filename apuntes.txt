@@ -42,7 +42,14 @@ Esto es un poco lio y parece ser que el root que te crea automaticamente mariadb
 
 esto lanzaba mysqld como daemon, osea, en segundo plano, y luego el propio script se esperaba a que ese proceso acabase. Que como es un daemon, nunca acaba, a no ser que haya algún problema serio, se apague el contenedor, etc. Una de las consecuencias de hacer esto es que se quede colgado el proceso hijo que se crea dentro del script para ejecutar mysqld, además de que la señal de SIGTERM no se manda a MariaDB, sino a bash, lo cual dificulta identificar problemas con los logs y tal.
 
-Por lo tanto, hay que poner siempre en el Dockerfile: o bien ENTRYPOINT[script] y CMD, o tener solo ENTRYPOINT[script] y luego un 'exec programaenprimerplano' dentro del script. Dejo escrito en el apartado de mariadb cómo hacer bien la inicializacion teniendo esto en cuenta.
+Por lo tanto, hay que poner siempre en el Dockerfile: o bien ENTRYPOINT[script] y CMD, o tener solo ENTRYPOINT[script] y luego un 'exec programaenprimerplano' dentro del script. 
+Con nginx hay que especificar que queremos que se ejecute en primer plano con la flag 'daemon off', porque sino de manera normal lo que hace nginx es:
+	1. Forks a master process (PID 1 temporarily)
+	2. That master process spawns worker processes and then detaches (goes to background)
+	3. It writes a PID file and exits the parent process
+Así que hay que escribir: CMD ["nginx", "-g", "daemon off;"]
+
+Dejo escrito en el apartado de mariadb cómo hacer bien la inicializacion teniendo esto en cuenta.
 
 
 
