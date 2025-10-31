@@ -47,7 +47,11 @@ Con nginx hay que especificar que queremos que se ejecute en primer plano con la
 	1. Forks a master process (PID 1 temporarily)
 	2. That master process spawns worker processes and then detaches (goes to background)
 	3. It writes a PID file and exits the parent process
-Así que hay que escribir: CMD ["nginx", "-g", "daemon off;"]
+Así que hay que escribir: CMD ["nginx", "-g", "daemon off;"].
+Por qué la diferencia?
+> nginx was designed as a system daemon — meant to run under init/systemd and fork itself to background immediately.
+> mysqld was designed as a server process that can be started either manually or by init scripts, so it stays in the foreground by default and lets its controlling system handle backgrounding.
+So in Docker, nginx must be told not to detach, while mysqld doesn’t need to be told anything.
 
 Dejo escrito en el apartado de mariadb cómo hacer bien la inicializacion teniendo esto en cuenta.
 
