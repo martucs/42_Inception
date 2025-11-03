@@ -10,7 +10,7 @@ COPY mariadb_init.sh /usr/local/bin/mariadb_init.sh
 
 RUN chmod +x /usr/local/bin/mariadb_init.sh
 
-RUN rm -rf /var/lib/mysql/*
+#RUN rm -rf /var/lib/mysql/*
 
 ENTRYPOINT ["/usr/local/bin/mariadb_init.sh"]
 
