@@ -110,7 +110,7 @@ Este error lo he visto al mirar los docker logs del contenedor, donde me apareci
 `"Downloading WordPress 6.8.3 (en_US)... md5 hash verified: d2c8b06fa3875fb890e3fa8fdbbc42fb Success: WordPress downloaded.  parameter Error: 'wp-config.php' not found. Either create one manually or use wp config create. Error: 'wp-config.php' not found. Either create one manually or use wp config create."`
 Este error sale porque no habia podido completar el comando `wp config create` porque no podia traducir 'mariadb:3306' a ninguna ip, no habia network.
 
-## 5. MariaDB (errores)
+## 5. MariaDB
 
 ### 5.1. Problemas de Ejecución (Client vs. Server)
 
